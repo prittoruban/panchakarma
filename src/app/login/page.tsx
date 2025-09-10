@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Eye, EyeOff } from 'lucide-react'
@@ -12,6 +12,19 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        // User is already logged in, redirect to dashboard
+        router.push('/dashboard')
+      }
+    }
+    
+    checkSession()
+  }, [router])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,36 +42,55 @@ export default function LoginPage() {
         return
       }
 
-      if (data.user) {
+      if (data.user && data.session) {
+        console.log('Login successful, user:', data.user.email)
+        
+        // Wait a bit for the session to be established
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
         // Get user profile to determine role
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, full_name')
           .eq('id', data.user.id)
           .single()
 
-        if (profile) {
-          // Redirect based on role
-          switch (profile.role) {
-            case 'admin':
-              router.push('/dashboard/admin')
-              break
-            case 'doctor':
-              router.push('/dashboard/doctor')
-              break
-            case 'patient':
-              router.push('/dashboard/patient')
-              break
-            default:
-              router.push('/dashboard')
+        if (profileError) {
+          console.error('Profile fetch error:', profileError)
+          if (profileError.code === 'PGRST116') {
+            setError('User profile not found. Please ensure your account is properly set up in the system.')
+          } else {
+            setError(`Profile error: ${profileError.message}`)
           }
+          return
+        }
+
+        if (profile && profile.role) {
+          console.log('Profile found:', profile)
+          
+          // Redirect based on role with a small delay
+          setTimeout(() => {
+            switch (profile.role) {
+              case 'admin':
+                router.push('/dashboard/admin')
+                break
+              case 'doctor':
+                router.push('/dashboard/doctor')
+                break
+              case 'patient':
+                router.push('/dashboard/patient')
+                break
+              default:
+                router.push('/dashboard')
+            }
+          }, 100)
         } else {
-          router.push('/dashboard')
+          setError('User profile exists but role is not assigned. Please contact administrator.')
         }
       }
     } catch (error) {
-      setError('An unexpected error occurred')
       console.error('Login error:', error)
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
     }

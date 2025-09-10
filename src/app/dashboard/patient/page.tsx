@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/auth'
 import { createClient } from '@/lib/supabase-server'
-import Calendar from '@/components/Calendar'
+import PatientCalendarWrapper from '@/components/PatientCalendarWrapper'
 import SessionCard from '@/components/SessionCard'
 import { Bell, Calendar as CalendarIcon, Clock, Star } from 'lucide-react'
 
@@ -95,13 +95,7 @@ export default async function PatientDashboard() {
       {/* Calendar View */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Session Calendar</h2>
-        <Calendar
-          events={calendarEvents}
-          onSelectEvent={(event) => {
-            // Handle event selection
-            console.log('Selected event:', event)
-          }}
-        />
+        <PatientCalendarWrapper events={calendarEvents} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
