@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/auth'
 import { createClient } from '@/lib/supabase-server'
 import PatientCalendarWrapper from '@/components/PatientCalendarWrapper'
-import SessionCard from '@/components/SessionCard'
+import PatientSessionWrapper from '@/components/PatientSessionWrapper'
 import { Bell, Calendar as CalendarIcon, Clock, Star } from 'lucide-react'
 
 export default async function PatientDashboard() {
@@ -111,33 +111,7 @@ export default async function PatientDashboard() {
             </a>
           </div>
           
-          <div className="space-y-4">
-            {sessions && sessions.length > 0 ? (
-              sessions.map((session) => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  userRole="patient"
-                  onViewDetails={(session) => {
-                    // Handle view details
-                    console.log('View details for session:', session)
-                  }}
-                />
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <CalendarIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium">No upcoming sessions</p>
-                <p className="text-sm">Book your first therapy session to get started</p>
-                <a
-                  href="/therapy"
-                  className="mt-4 inline-block bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                >
-                  Book Session
-                </a>
-              </div>
-            )}
-          </div>
+          <PatientSessionWrapper sessions={sessions || []} />
         </div>
 
         {/* Recent Notifications */}
